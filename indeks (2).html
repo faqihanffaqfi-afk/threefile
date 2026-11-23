@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Decimal Archery — Panahan Desimal</title>
+<style>
+:root{--bg:#0f2a1d;--gold:#facc15;--leaf:#7ddc9a;--fox:#d98c3f;--text:#f8fafc;--muted:#c3d9c9}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,Segoe UI,Arial,sans-serif;color:var(--text);min-height:100vh;
+background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cg fill='%23ffffff' fill-opacity='.07' transform='rotate(-20 40 40)'%3E%3Cellipse cx='40' cy='48' rx='11' ry='9'/%3E%3Ccircle cx='26' cy='34' r='5'/%3E%3Ccircle cx='36' cy='27' r='5'/%3E%3Ccircle cx='47' cy='27' r='5'/%3E%3Ccircle cx='56' cy='34' r='5'/%3E%3C/g%3E%3C/svg%3E"),radial-gradient(circle at 50% 0,#245c3f,#0f2a1d 45%,#07170f);background-attachment:fixed;
+padding:max(10px,env(safe-area-inset-top)) 12px max(14px,env(safe-area-inset-bottom))}
+#app{max-width:620px;margin:0 auto}
+.card{background:#ffffff12;border:1px solid #ffffff22;border-radius:22px;padding:22px;margin-top:10px}
+h1{margin:6px 0;font-size:clamp(30px,8vw,44px);line-height:1.05}h1 span{color:var(--gold)}
+p{line-height:1.6;color:var(--muted);margin:8px 0}
+.animals{font-size:44px;letter-spacing:6px}
+input{width:100%;padding:14px;border-radius:14px;border:1px solid #ffffff30;background:#0b2216;color:#fff;font-size:17px;margin:10px 0}
+input:focus-visible,button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.btn{border:0;border-radius:14px;padding:14px 22px;font-size:16px;font-weight:900;cursor:pointer;color:#0f2a1d;background:linear-gradient(90deg,var(--leaf),#ffd36e,#ff9e7a)}
+.btn.sec{background:#ffffff14;color:#fff;border:1px solid #ffffff30}
+.hud{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:8px}
+.pill{background:#ffffff14;border:1px solid #ffffff25;border-radius:99px;padding:7px 12px;font-weight:800;font-size:14px}
+.mascot{display:flex;gap:10px;align-items:center;margin-bottom:8px}.mascot b{font-size:42px;line-height:1}.say{background:#ffffff14;border-radius:14px;padding:8px 12px;font-size:14px}
+.qbox{background:#ffffff14;border:1px solid #ffffff25;border-radius:16px;padding:12px 14px;font-size:clamp(16px,4.2vw,20px);font-weight:800;line-height:1.35;margin-bottom:8px}
+canvas{width:100%;height:auto;display:block;border-radius:18px;touch-action:none;cursor:crosshair;border:2px solid #ffffff25}
+.fb{margin-top:10px;padding:14px;border-radius:16px;background:#0b2216;border:1px solid #ffffff25}
+.fb strong{display:block;font-size:18px;margin-bottom:4px}
+.big{font-size:70px;font-weight:900;color:var(--gold);line-height:1}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div id="app">
+
+<section id="start" class="card" style="text-align:center">
+  <div class="animals">🐰🐱🦊🦁</div>
+  <h1>DECIMAL <span>ARCHERY</span></h1>
+  <p>Bidik papan target yang berisi jawaban benar, lalu lepaskan panahmu! Ada 10 soal bilangan desimal Fase D.</p>
+  <p><b>Cara main:</b> geser jari (atau gerakkan mouse) untuk membidik. Lepas jari (atau klik) untuk memanah. Target terus bergerak, jadi pilih waktu yang tepat.</p>
+  <input id="nm" maxlength="24" placeholder="Nama pemanah..." autocomplete="off">
+  <button class="btn" id="go">MULAI BERBURU 🏹</button>
+</section>
+
+<section id="game" hidden>
+  <div class="hud"><span class="pill" id="qno">Soal 1/10</span><span class="pill">⭐ <span id="sc">0</span></span><span class="pill">🔥 <span id="stk">0</span></span><button class="pill" id="snd" style="color:#fff;cursor:pointer">🔊</button></div>
+  <div class="mascot"><b id="mas">🐰</b><div class="say" id="say">Ayo mulai!</div></div>
+  <div class="qbox" id="qtext"></div>
+  <canvas id="cv" aria-label="Arena panahan: geser untuk membidik, lepas untuk memanah"></canvas>
+  <div class="fb" id="fb" hidden><strong id="fbt"></strong><span id="fbe"></span><div style="margin-top:12px"><button class="btn" id="nx">Soal berikutnya</button></div></div>
+</section>
+
+<section id="end" class="card" style="text-align:center" hidden>
+  <div class="animals" id="egrade">🦁</div>
+  <p id="ename"></p>
+  <div class="big" id="escore">0</div>
+  <h2 id="etitle"></h2>
+  <p id="edetail"></p>
+  <button class="btn" id="again">MAIN LAGI 🔄</button>
+</section>
+
+</div>
+<script>
+const Q=[
+{q:"Manakah bilangan desimal yang menunjukkan tiga persepuluh?",a:["0,03","0,3","3,0","30,0"],c:1,e:"Tiga persepuluh ditulis 0,3 karena angka 3 berada pada tempat persepuluhan."},
+{q:"Nilai tempat angka 7 pada bilangan 4,725 adalah ...",a:["satuan","persepuluhan","perseratusan","perseribuan"],c:1,e:"Angka 7 berada tepat satu tempat di belakang koma, jadi menempati tempat persepuluhan."},
+{q:"Bentuk desimal dari 7/10 adalah ...",a:["0,07","0,7","7,0","70"],c:1,e:"Penyebut 10 berarti satu angka di belakang koma: 7/10 = 0,7."},
+{q:"Bilangan yang paling besar adalah ...",a:["0,45","0,405","0,54","0,504"],c:2,e:"Bandingkan nilai tempat: 0,54 lebih besar daripada 0,504, 0,45, dan 0,405."},
+{q:"Bentuk yang setara dengan 2,500 adalah ...",a:["2,05","2,5","25","0,25"],c:1,e:"Nol di belakang bagian desimal tidak mengubah nilai, jadi 2,500 = 2,5."},
+{q:"Hasil dari 2,5 + 1,75 adalah ...",a:["3,25","4,15","4,25","4,75"],c:2,e:"Sejajarkan koma: 2,50 + 1,75 = 4,25."},
+{q:"Hasil dari 7,2 − 3,85 adalah ...",a:["3,15","3,35","4,35","4,15"],c:1,e:"Sejajarkan koma: 7,20 − 3,85 = 3,35."},
+{q:"Hasil dari 1,2 × 0,5 adalah ...",a:["0,06","0,6","6","0,17"],c:1,e:"1,2 × 0,5 = 0,6."},
+{q:"Hasil dari 4,8 ÷ 0,6 adalah ...",a:["0,8","6","8","80"],c:2,e:"Kalikan kedua bilangan dengan 10: 48 ÷ 6 = 8."},
+{q:"Bulatkan 6,748 menjadi satu angka di belakang koma.",a:["6,7","6,8","6,74","7,0"],c:0,e:"Angka persepuluhan adalah 7 dan angka berikutnya 4 (kurang dari 5), jadi hasilnya 6,7."},
+{q:"Rani memiliki 2,75 liter air dan menambahkan 1,5 liter lagi. Berapa liter air sekarang?",a:["3,25 L","4,15 L","4,25 L","4,75 L"],c:2,e:"2,75 + 1,50 = 4,25 liter."},
+{q:"Sebuah pita panjangnya 5,6 m. Dipakai 2,35 m. Berapa meter sisanya?",a:["2,25 m","3,15 m","3,25 m","3,35 m"],c:2,e:"5,60 − 2,35 = 3,25 meter."},
+{q:"Harga sebuah buku Rp12.500,50. Jika dibayar Rp20.000,00, kembaliannya adalah ...",a:["Rp7.499,50","Rp7.500,50","Rp8.499,50","Rp8.500,50"],c:0,e:"Rp20.000,00 − Rp12.500,50 = Rp7.499,50."},
+{q:"Sebuah sepeda menempuh 12,5 km dalam 0,5 jam. Kecepatan rata-ratanya adalah ...",a:["6,25 km/jam","12,5 km/jam","25 km/jam","50 km/jam"],c:2,e:"Kecepatan = jarak ÷ waktu = 12,5 ÷ 0,5 = 25 km/jam."},
+{q:"Nilai x pada 3,5 + x = 8,25 adalah ...",a:["4,25","4,5","4,75","5,25"],c:2,e:"x = 8,25 − 3,50 = 4,75."},
+{q:"Hasil dari 0,25 × 4,8 adalah ...",a:["0,12","1,2","12","0,92"],c:1,e:"0,25 sama dengan 1/4, sehingga 4,8 ÷ 4 = 1,2."},
+{q:"Hasil dari 3,6 + 2,45 − 1,25 adalah ...",a:["4,70","4,80","4,90","5,80"],c:1,e:"3,60 + 2,45 = 6,05, lalu 6,05 − 1,25 = 4,80."},
+{q:"Sebuah toko memberi diskon 0,15 dari harga Rp80.000. Besar diskonnya adalah ...",a:["Rp8.000","Rp10.000","Rp12.000","Rp15.000"],c:2,e:"0,15 × Rp80.000 = Rp12.000."},
+{q:"Sebuah tangki berisi 12,5 liter. Setiap menit digunakan 0,75 liter. Setelah 8 menit, sisa air adalah ...",a:["5,5 L","6,0 L","6,5 L","7,5 L"],c:2,e:"Air terpakai = 0,75 × 8 = 6 L. Sisa = 12,5 − 6 = 6,5 L."},
+{q:"Perjalanan terdiri dari 3,75 km berjalan, 5,8 km bersepeda, lalu 2,45 km berjalan lagi. Total jaraknya adalah ...",a:["11,00 km","11,50 km","12,00 km","12,50 km"],c:2,e:"3,75 + 5,80 + 2,45 = 12,00 km."}
+];
+
+const $=id=>document.getElementById(id);
+const W=600,H=640,R=70,BX=300,BY=585,AMP=60;
+const cv=$('cv'),ctx=cv.getContext('2d'),dpr=Math.min(window.devicePixelRatio||1,2);
+cv.width=W*dpr;cv.height=H*dpr;ctx.scale(dpr,dpr);
+const animals=['🐰','🐱','🦊','🐼'];
+const happy=['Tepat sekali! Hebat!','Panahmu jitu!','Yeay, benar!','Pemanah handal!'];
+const sad=['Tidak apa-apa, baca pembahasannya ya.','Hampir! Teliti lagi komanya.','Belum tepat, kamu pasti bisa.'];
+let order=[],qi=0,score=0,right=0,streak=0,st='aim',T=[],stuck=[],arrow=null,cx=300,cy=250,tq=0,w=1,sound=true,name='Pemanah';
+
+function pick(){const g=[[0,2],[5,3],[10,2],[15,3]],r=[];
+  g.forEach(([s,n])=>{r.push(...[0,1,2,3,4].map(k=>s+k).sort(()=>Math.random()-.5).slice(0,n).sort((a,b)=>a-b))});return r}
+function say(m,t){$('mas').textContent=m;$('say').textContent=t}
+function hud(){$('qno').textContent='Soal '+(qi+1)+'/10';$('sc').textContent=score;$('stk').textContent=streak}
+function newQ(){
+  const q=Q[order[qi]];$('qtext').textContent=q.q;
+  const pos=[[170,150],[430,150],[170,330],[430,330]];
+  T=q.a.map((v,i)=>({v,ok:i===q.c})).sort(()=>Math.random()-.5)
+    .map((o,i)=>({...o,x0:pos[i][0],y:pos[i][1],ph:i<2?0:1.7,an:animals[i],mark:''}));
+  stuck=[];arrow=null;st='aim';tq=0;w=1+qi*.12;$('fb').hidden=true;hud();
+  say(['🐰','🐱','🦊','🦁'][Math.floor(qi/3)%4],qi===0?'Bidik jawaban yang benar!':'Soal baru! Pilih targetmu.');
+}
+const tx=t=>t.x0+AMP*Math.sin(w*tq+t.ph);
+
+function shoot(){if(st!=='aim')return;
+  arrow={sx:BX,sy:BY,tx:cx,ty:cy,ang:Math.atan2(cy-BY,cx-BX),t0:performance.now(),dur:300};st='fly';beep(420)}
+function land(){
+  const x=arrow.tx,y=arrow.ty,t=T.find(o=>Math.hypot(x-tx(o),y-o.y)<=R);
+  if(!t){beep(200);say('🐢','Meleset! Bidik lagi, ya.');st='aim';arrow=null;return}
+  stuck.push({t,dx:x-tx(t),dy:y-t.y,ang:arrow.ang});arrow=null;
+  const q=Q[order[qi]];
+  T.forEach(o=>{if(o.ok)o.mark='ok'});
+  if(t.ok){score+=10;right++;streak++;beep(740);say('🦊',happy[qi%4]);
+    $('fbt').textContent='✅ Tepat sasaran! +10 poin'+(streak>=3?' 🔥 beruntun '+streak:'');$('fbe').textContent=q.e}
+  else{streak=0;t.mark='no';beep(180);say('🐻',sad[qi%3]);
+    $('fbt').textContent='❌ Belum tepat.';$('fbe').textContent='Jawaban benar: '+q.a[q.c]+'. '+q.e}
+  $('nx').textContent=qi>=9?'Lihat hasil 🏆':'Soal berikutnya';
+  st='fb';hud();$('fb').hidden=false;
+}
+function next(){qi++;if(qi>=10)end();else newQ()}
+function end(){
+  $('game').hidden=true;$('end').hidden=false;
+  const g=score>=90?['🦁','Raja Pemanah Desimal']:score>=70?['🦊','Pemanah Hebat']:score>=50?['🐰','Pemanah Muda']:['🐢','Terus Berlatih'];
+  $('egrade').textContent=g[0];$('etitle').textContent=g[1];$('escore').textContent=score;$('ename').textContent=name;
+  let best=0;try{best=+localStorage.getItem('archeryBest')||0;if(score>best){best=score;localStorage.setItem('archeryBest',best)}}catch(e){}
+  $('edetail').textContent=right+' dari 10 soal benar. Skor terbaik di perangkat ini: '+best+'.';
+}
+
+function arrowShape(){
+  ctx.lineCap='round';ctx.strokeStyle='#8a5a2b';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(-58,0);ctx.lineTo(-4,0);ctx.stroke();
+  ctx.fillStyle='#e5e7eb';ctx.beginPath();ctx.moveTo(8,0);ctx.lineTo(-6,-6);ctx.lineTo(-6,6);ctx.fill();
+  ctx.fillStyle='#ef4444';ctx.beginPath();ctx.moveTo(-58,0);ctx.lineTo(-48,-7);ctx.lineTo(-44,0);ctx.lineTo(-48,7);ctx.fill();
+}
+function arrowAt(x,y,a){ctx.save();ctx.translate(x,y);ctx.rotate(a);arrowShape();ctx.restore()}
+function emoji(t,x,y,s){ctx.font=s+'px serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(t,x,y)}
+
+function drawTarget(t){
+  const x=tx(t),y=t.y;
+  if(t.mark){ctx.beginPath();ctx.arc(x,y,R+9,0,7);ctx.fillStyle=t.mark==='ok'?'#22c55eaa':'#ef4444aa';ctx.fill()}
+  [[1,'#f6e7bd'],[.78,'#c9743a'],[.56,'#f6e7bd'],[.34,'#c9743a']].forEach(([k,c])=>{ctx.beginPath();ctx.arc(x,y,R*k,0,7);ctx.fillStyle=c;ctx.fill()});
+  ctx.lineWidth=4;ctx.strokeStyle='#5a3414';ctx.beginPath();ctx.arc(x,y,R,0,7);ctx.stroke();
+  const fs=t.v.length>9?20:t.v.length>6?24:28;
+  ctx.font='900 '+fs+'px system-ui,Arial';ctx.textAlign='center';ctx.textBaseline='middle';
+  ctx.lineWidth=6;ctx.strokeStyle='#fffbe8';ctx.lineJoin='round';ctx.strokeText(t.v,x,y,R*1.7);
+  ctx.fillStyle='#3a1f0b';ctx.fillText(t.v,x,y,R*1.7);
+  emoji(t.an,x-R+6,y-R+8,30);
+}
+function draw(now){
+  const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#9be0b4');g.addColorStop(.6,'#3f9166');g.addColorStop(1,'#1d5a38');
+  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='#2f7a52';ctx.beginPath();ctx.ellipse(120,470,260,90,0,0,7);ctx.fill();ctx.beginPath();ctx.ellipse(500,490,280,100,0,0,7);ctx.fill();
+  ctx.fillStyle='#1d5a38';ctx.fillRect(0,560,W,80);
+  emoji('🌳',36,500,64);emoji('🌲',566,505,70);emoji('🌿',100,570,30);emoji('🌿',500,575,30);emoji('🦋',300,60,26);
+  T.forEach(drawTarget);
+  stuck.forEach(s=>arrowAt(tx(s.t)+s.dx,s.t.y+s.dy,s.ang));
+  const ang=Math.atan2(cy-BY,cx-BX);
+  emoji('🦊',BX,BY+30,54);
+  if(st==='aim'){ctx.setLineDash([6,8]);ctx.strokeStyle='#ffffff77';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(BX,BY);ctx.lineTo(cx,cy);ctx.stroke();ctx.setLineDash([])}
+  ctx.save();ctx.translate(BX,BY);ctx.rotate(ang);
+  ctx.strokeStyle='#7a4a1d';ctx.lineWidth=7;ctx.lineCap='round';ctx.beginPath();ctx.arc(0,0,40,-1.15,1.15);ctx.stroke();
+  const ex=40*Math.cos(1.15),ey=40*Math.sin(1.15),pull=st==='aim'?-14:ex;
+  ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(ex,-ey);ctx.lineTo(pull,0);ctx.lineTo(ex,ey);ctx.stroke();
+  if(st==='aim'){ctx.translate(44,0);arrowShape()}
+  ctx.restore();
+  if(arrow){const p=Math.min(1,(now-arrow.t0)/arrow.dur);arrowAt(arrow.sx+(arrow.tx-arrow.sx)*p,arrow.sy+(arrow.ty-arrow.sy)*p,arrow.ang)}
+  if(st==='aim'){ctx.strokeStyle='#fff';ctx.lineWidth=3;ctx.beginPath();ctx.arc(cx,cy,20,0,7);ctx.moveTo(cx-30,cy);ctx.lineTo(cx-8,cy);ctx.moveTo(cx+8,cy);ctx.lineTo(cx+30,cy);ctx.moveTo(cx,cy-30);ctx.lineTo(cx,cy-8);ctx.moveTo(cx,cy+8);ctx.lineTo(cx,cy+30);ctx.stroke();
+    ctx.fillStyle='#ef4444';ctx.beginPath();ctx.arc(cx,cy,3,0,7);ctx.fill()}
+}
+let last=0;
+function loop(now){
+  const dt=Math.min((now-last)/1000,.05);last=now;
+  if(!$('game').hidden){if(st!=='fb')tq+=dt;draw(now);if(st==='fly'&&now-arrow.t0>=arrow.dur)land()}
+  requestAnimationFrame(loop);
+}
+
+function pt(e){const r=cv.getBoundingClientRect();return[(e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height]}
+function aim(e){if(st!=='aim')return;const p=pt(e);cx=Math.max(10,Math.min(W-10,p[0]));cy=Math.max(20,Math.min(540,p[1]))}
+cv.addEventListener('pointerdown',e=>{aim(e);try{cv.setPointerCapture(e.pointerId)}catch(_){}});
+cv.addEventListener('pointermove',aim);
+cv.addEventListener('pointerup',e=>{aim(e);shoot()});
+
+let ac;function beep(f){if(!sound)return;try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();const o=ac.createOscillator(),g=ac.createGain();o.frequency.value=f;g.gain.value=.05;o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+.13)}catch(e){}}
+$('snd').onclick=()=>{sound=!sound;$('snd').textContent=sound?'🔊':'🔇'};
+function startGame(){name=$('nm').value.trim()||'Pemanah';qi=0;score=0;right=0;streak=0;order=pick();
+  $('start').hidden=true;$('end').hidden=true;$('game').hidden=false;newQ()}
+$('go').onclick=startGame;$('again').onclick=startGame;$('nx').onclick=next;
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
